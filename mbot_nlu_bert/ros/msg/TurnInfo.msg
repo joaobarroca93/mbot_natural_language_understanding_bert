@@ -1,0 +1,2 @@
+uint8 turn_number
+bool end_turn

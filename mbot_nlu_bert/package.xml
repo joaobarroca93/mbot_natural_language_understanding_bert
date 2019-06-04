@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>mbot_nlu_bert</name>
+  <version>1.0.0</version>
+  <description>The mbot_slu package</description>
+
+  <maintainer email="joao.barroca@tecnico.ulisboa.pt">Joao Barroca</maintainer>
+
+  <author email="joao.barroca@tecnico.ulisboa.pt">Joao Barroca</author>
+
+  <license>GPLv3</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>message_generation</build_depend>
+
+  <exec_depend>message_runtime</exec_depend>
+
+</package>
