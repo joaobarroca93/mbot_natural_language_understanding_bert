@@ -166,8 +166,8 @@ class NLUNode(object):
 					dialogue_act_msg.dtype = predictions['d-type'][0]
 					print("{} -> {}(".format(pred[0], predictions['d-type'][0]), end='')
 
-					dialogue_act_msg.joint_probability = predictions['probability']
-					print('[{:0.3}]'.format(dialogue_act_msg.joint_probability))
+					dialogue_act_msg.d_type_probability = predictions['d-type'][1]
+					print('[{:0.3}]'.format(dialogue_act_msg.d_type_probability))
 
 					for slot in self.slots:
 						value = predictions[slot][0]
