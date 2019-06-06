@@ -36,6 +36,10 @@
 ehthumbs.db
 Thumbs.db
 
+# pyc generated files #
+######################
+*.pyc
+
 # directories #
 ######################
 /mbot_nlu_bert_classifiers/*
