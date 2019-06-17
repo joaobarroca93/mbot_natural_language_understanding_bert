@@ -48,7 +48,7 @@ class NLUNode(object):
 		slots 			= rospy.get_param('~slots', ['intent', 'person', 'object', 'source', 'destination'])
 		node_name 		= rospy.get_param('~node_name', 'natural_language_understanding')
 		d_acts_topic 	= rospy.get_param('~dialogue_acts_topic_name', '/dialogue_acts')
-		onthology_name 	= rospy.get_param('~onthology_full_name', 'ros/src/mbot_nlu_bert_ros/onthology.json')
+		ontology_name 	= rospy.get_param('~ontology_full_name', 'ros/src/mbot_nlu_bert_ros/ontology.json')
 		output_dir 		= rospy.get_param('~classifier_model_full_path', 'ros/src/mbot_nlu_bert_ros/multi_head_classifier_model_v2')
 		bert_model_dir 	= rospy.get_param('~bert_model_full_path', 'https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1')
 		max_seq_length  = rospy.get_param('~max_seq_length', 20)
@@ -67,7 +67,7 @@ class NLUNode(object):
 		rospy.set_param('~slots', slots)
 		rospy.set_param('~node_name', node_name)
 		rospy.set_param('~dialogue_acts_topic_name', d_acts_topic)
-		rospy.set_param('~onthology_full_name', onthology_name)
+		rospy.set_param('~ontology_full_name', ontology_name)
 		rospy.set_param('~classifier_model_full_path', output_dir)
 		rospy.set_param('~bert_model_full_path', bert_model_dir)
 		rospy.set_param('~max_seq_length', max_seq_length)
@@ -80,10 +80,10 @@ class NLUNode(object):
 		# get useful paths
 		generic_path = rospack.get_path("mbot_nlu_bert")
 		classifier_path = os.path.join( generic_path, output_dir )
-		onthology_path = os.path.join( generic_path, onthology_name )
-		logdebug_param({'generic_path': generic_path, 'classifier_path': classifier_path, 'onthology_full_path': onthology_path})
+		ontology_path = os.path.join( generic_path, ontology_name )
+		logdebug_param({'generic_path': generic_path, 'classifier_path': classifier_path, 'onthology_full_path': ontology_path})
 
-		with open(onthology_path, "r") as f:
+		with open(ontology_path, "r") as f:
 			self.label_list = json.load(f)
 		rospy.logdebug('=== DIALOGUE LABEL LIST ============')
 		rospy.logdebug(self.label_list)
@@ -135,7 +135,10 @@ class NLUNode(object):
 				self.nlu_request_received = False
 
 				pred_sentences = [hypothesis.transcript for hypothesis in self.asr_n_best_list.hypothesis]
+				
+				# preprocess user utterance hypothesis before feeding the semantic decoder
 				pred_sentences = self.preprocess_sentences(pred_sentences)
+				# compute probability distribution of each hypothesis through softmax of confidence scores
 				confs = [hypothesis.confidence for hypothesis in self.asr_n_best_list.hypothesis]
 				probs = np.exp(confs) / np.sum(np.exp(confs))
 
@@ -148,7 +151,8 @@ class NLUNode(object):
 				#	rospy.loginfo(pred)
 
 				# ================================ Computes marginal probabilities ================================
-
+				# using the sum rule, i.e. summing over all the user utterance hypothesis, we compute the marginal
+				# porbabilities.
 				predictions = {label: [(value, 0) for value in self.label_list[label]] for label in self.label_keys}
 				for j, pred in enumerate(preds):
 					for label in self.label_keys:
