@@ -5,6 +5,7 @@ from __future__ import print_function
 import copy
 import json
 import os
+import string
 
 import numpy as np
 
@@ -114,6 +115,16 @@ class NLUNode(object):
 		self.asr_n_best_list = msg
 		self.nlu_request_received = True
 
+	def preprocess_sentences(self, sentences):
+
+		no_punct_sent = [
+			sentence.translate(string.maketrans("",""), string.punctuation)
+		for sentence in sentences ]
+
+		return no_punct_sent
+
+
+
 	def begin(self):
 
 		while not rospy.is_shutdown():
@@ -124,6 +135,7 @@ class NLUNode(object):
 				self.nlu_request_received = False
 
 				pred_sentences = [hypothesis.transcript for hypothesis in self.asr_n_best_list.hypothesis]
+				pred_sentences = self.preprocess_sentences(pred_sentences)
 				confs = [hypothesis.confidence for hypothesis in self.asr_n_best_list.hypothesis]
 				probs = np.exp(confs) / np.sum(np.exp(confs))
 
