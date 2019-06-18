@@ -45,6 +45,7 @@ class NLUNode(object):
 
 		# get useful parameters, and if any of them doesn't exist, use the default value
 		rate 			= rospy.get_param('~loop_rate', 10.0)
+		#slots 			= rospy.get_param('~slots', ['destination'])
 		slots 			= rospy.get_param('~slots', ['intent', 'person', 'object', 'source', 'destination'])
 		node_name 		= rospy.get_param('~node_name', 'natural_language_understanding')
 		d_acts_topic 	= rospy.get_param('~dialogue_acts_topic_name', '/dialogue_acts')
@@ -135,6 +136,7 @@ class NLUNode(object):
 				self.nlu_request_received = False
 
 				pred_sentences = [hypothesis.transcript for hypothesis in self.asr_n_best_list.hypothesis]
+				#pred_sentences = pred_sentences[0:3]
 				
 				# preprocess user utterance hypothesis before feeding the semantic decoder
 				pred_sentences = self.preprocess_sentences(pred_sentences)
@@ -147,12 +149,46 @@ class NLUNode(object):
 				rospy.loginfo('Beginning Predictions!')
 				preds = self.nlu_object.predict(pred_sentences, self.label_list)
 
-				#for pred in preds:
-				#	rospy.loginfo(pred)
+				"""
+				for pred in preds:
+					rospy.logdebug(pred)
+				"""
 
+				# ================================ Organize the conditonal probabilities ================================
+				rospy.logdebug('\n======= CONDITIONAL PROBS =======\n')
+				predictions = []
+				for j, pred in enumerate(preds):
+					slot_value_dict = {label: [(value, 0) for value in self.label_list[label]] for label in self.label_keys}
+					for label in self.label_keys:
+						for i, value in enumerate(self.label_list[label]):
+							new_prob = pred[1][label][i]
+							slot_value_dict[label][i]=( (value, new_prob) )
+					
+					[ slot_value_dict[label].sort(key=lambda x: x[1], reverse=True) for label in self.label_keys ]
+					rospy.logdebug('======= {}[{}] ======='.format(pred_sentences[j], probs[j]))
+					rospy.logdebug(slot_value_dict)
+					predictions.append(slot_value_dict)
+
+				# ================================ Compute the joint probabilities ================================
+				predictions = []
+				rospy.logdebug('\n======= JOINT PROBS =======\n')
+				for j, pred in enumerate(preds):
+					slot_value_dict = {label: [(value, 0) for value in self.label_list[label]] for label in self.label_keys}
+					for label in self.label_keys:
+						for i, value in enumerate(self.label_list[label]):
+							new_prob = pred[1][label][i] * probs[j]
+							slot_value_dict[label][i]=( (value, new_prob) )
+					
+					[ slot_value_dict[label].sort(key=lambda x: x[1], reverse=True) for label in self.label_keys ]
+					rospy.logdebug('======= {} ======='.format(pred_sentences[j]))
+					rospy.logdebug(slot_value_dict)
+					predictions.append(slot_value_dict)
+
+				
 				# ================================ Computes marginal probabilities ================================
 				# using the sum rule, i.e. summing over all the user utterance hypothesis, we compute the marginal
 				# porbabilities.
+				rospy.logdebug('\n======= MARGINAL PROBS =======\n')
 				predictions = {label: [(value, 0) for value in self.label_list[label]] for label in self.label_keys}
 				for j, pred in enumerate(preds):
 					for label in self.label_keys:
@@ -162,6 +198,7 @@ class NLUNode(object):
 							
 				[ predictions[label].sort(key=lambda x: x[1], reverse=True) for label in self.label_keys ]
 				rospy.logdebug(predictions)
+				
  
 
 				# ================================ Creates DialogActs to publish ================================
@@ -190,7 +227,7 @@ class NLUNode(object):
 						prob = predictions[slot][1]
 						dialogue_act_msg.slots.append(InformSlot(slot=slot, value=value, probability=prob))
 						if not value is "none":
-							print('{}={}'.format(slot, value), end=',')
+							print('{}={}[{}]'.format(slot, value, prob), end=',')
 					print()
 
 					dialogue_act_array_msg.dialogue_acts.append(copy.deepcopy(dialogue_act_msg))
