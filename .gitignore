@@ -46,4 +46,6 @@ Thumbs.db
 /mbot_nlu_bert/ros/src/mbot_nlu_bert_ros/bert_model/*
 /mbot_nlu_bert/ros/src/mbot_nlu_bert_ros/classifier_model/*
 /mbot_nlu_bert/ros/src/mbot_nlu_bert_ros/multi_head_classifier_model_v2/*
-/mbot_nlu_bert/ros/src/mbot_nlu_bert_ros/onthology.json
+/mbot_nlu_bert/ros/src/mbot_nlu_bert_ros/multi_head_classifier_model_v3/*
+/mbot_nlu_bert/ros/src/mbot_nlu_bert_ros/ontology.json
+/mbot_nlu_bert/ros/src/mbot_nlu_bert_ros/ontology_v2.json

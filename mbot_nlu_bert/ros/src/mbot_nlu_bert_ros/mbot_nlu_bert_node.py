@@ -14,7 +14,7 @@ import rospkg
 
 from std_msgs.msg import String
 from mbot_nlu_bert.msg import InformSlot, DialogAct, DialogActArray, ASRHypothesis, ASRNBestList
-from mbot_nlu_bert.mbot_nlu_bert_common_v2 import NaturalLanguageUnderstanding
+from mbot_nlu_bert.mbot_nlu_bert_common_v3 import NaturalLanguageUnderstanding
 
 
 # parameters 
